@@ -37,8 +37,17 @@ logger.addHandler(consoleHandler)
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 CONFIGFILE = os.path.join(ROOTDIR, "config.ini")
 
+LOG_LEVEL_MAP = {"debug": logging.DEBUG,
+                 "info": logging.INFO,
+                 "error": logging.ERROR}
 
-def process(rulefile_path, logfile_path=None):
+
+def set_log_level(log_level):
+    if log_level is not None:
+        logger.setLevel(LOG_LEVEL_MAP[log_level])
+
+
+def process(rulefile_path, mailto_path, log_level=None, logfile_path=None):
     """Main process
     Args:
         rulefile_path (str): Absolute path of rule file.
@@ -52,6 +61,9 @@ def process(rulefile_path, logfile_path=None):
                                   replace('-', ''))))
         log_file_handler.setFormatter(logFormatter)
         logger.addHandler(log_file_handler)
+
+    if log_level is not None:
+        set_log_level(log_level.strip().lower())
 
     config = load_conf(CONFIGFILE)
     mailsender = MailSender(config)
@@ -91,6 +103,6 @@ def process(rulefile_path, logfile_path=None):
     for mail_target_host, mail_content in mail_record.items():
         real_mail_content = '\n'.join(chain(mail_content["mail_body"],
                                             [EMAIL_TAIL]))
-        mailsender.sendmail(config.get("email", "mailto").replace(' ', ''),
+        mailsender.sendmail(mailsender.concat_addresses(mailto_path),
                             mail_content["mail_subject"],
                             real_mail_content)

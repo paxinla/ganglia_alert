@@ -99,6 +99,26 @@ class MailSender(object):
         self.mail_server_host = conf.get("email", "smtp_host")
         self.mail_server_port = conf.get("email", "smtp_port")
 
+    def concat_addresses(self, addr_file):
+        """Read email addresses from a text file, and concat them.
+
+        In the email addresses file, each line should contain only one address.
+
+        Args: 
+            addr_file  (str): Absolute path of the email address file.
+        Returns:
+            str: A string contains all email addresses with semicolon.
+        """
+        recv_addr = []
+        with open(addr_file, "rb") as f:
+            for each_addr in f:
+                if each_addr[0].strip().startswith("#"):
+                    continue
+                recv_addr.append(each_addr[0].replace(";").strip())
+
+        return ";".join(recv_addr)
+
+
     def sendmail(self, mailto, subject, body):
         """Send an mail.
         Args:
