@@ -74,7 +74,7 @@ def parse_rule(rule_path):
     with open(rule_path, "rb") as f:
         rf = csv.reader(f, delimiter=':', encoding="utf-8")
         for each_line in rf:
-            if each_line.startswith("#"):
+            if each_line[0].startswith("#"):
                 continue
 
             yield (each_line[0],

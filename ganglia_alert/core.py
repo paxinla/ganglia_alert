@@ -9,6 +9,8 @@ import os
 import logging
 import traceback
 from datetime import datetime
+from itertools import chain
+from collections import defaultdict
 
 from ganglia_alert.util import load_conf
 from ganglia_alert.util import parse_rule
@@ -18,6 +20,7 @@ from ganglia_alert.util import GangliaInfo
 
 from ganglia_alert.spec import EMAIL_SUBJECT
 from ganglia_alert.spec import EMAIL_BODY
+from ganglia_alert.spec import EMAIL_TAIL
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -55,6 +58,7 @@ def process(rulefile_path, logfile_path=None):
     query_ganglia = GangliaQuery(config.get("ganglia", "gmetad_host"),
                                  config.get("ganglia", "gmetad_port"))
     ganglia_info = GangliaInfo()
+    mail_record = defaultdict(dict)
 
     for each_rule in parse_rule(rulefile_path):
         grid, cluster, host, metric, cmpop, threshold = each_rule
@@ -69,8 +73,11 @@ def process(rulefile_path, logfile_path=None):
                                                               threshold)
 
         if should_alert:
-            mail_subject = EMAIL_SUBJECT.format(metricname=metric,
-                                                host=host)
+            mail_subject = EMAIL_SUBJECT.format(host=host)
+            if (grid, cluster, host) not in mail_record:
+                mail_record[(grid, cluster, host)]["mail_subject"] = EMAIL_SUBJECT.format(host=host)
+                mail_record[(grid, cluster, host)]["mail_body"] = []
+
             mail_body = EMAIL_BODY.format(gridname=grid,
                                           clustername=cluster,
                                           host=host,
@@ -78,6 +85,12 @@ def process(rulefile_path, logfile_path=None):
                                           metricvalue=metric_value,
                                           metricop=cmpop,
                                           metricthreshold=threshold)
-            mailsender.sendmail(config.get("email", "mailto").replace(' ', ''),
-                                mail_subject,
-                                mail_body)
+            mail_record[(grid, cluster, host)]["mail_body"].append(mail_body)
+
+
+    for mail_target_host, mail_content in mail_record.items():
+        real_mail_content = '\n'.join(chain(mail_content["mail_body"],
+                                            [EMAIL_TAIL]))
+        mailsender.sendmail(config.get("email", "mailto").replace(' ', ''),
+                            mail_content["mail_subject"],
+                            real_mail_content)

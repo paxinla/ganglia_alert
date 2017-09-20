@@ -10,7 +10,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 
-EMAIL_SUBJECT = "[Ganglia][Warnning]Waining for {metricname} of host({host})"
+EMAIL_SUBJECT = "[Ganglia][Warnning]Host: {host}"
 
 EMAIL_BODY = """
 - Target Host: {gridname} -> {clustername} -> {host}
@@ -20,6 +20,10 @@ EMAIL_BODY = """
 - Monitor operator: {metricop}
 - Metric threshold: {metricthreshold}
 
+-------------------------------------------------------
+"""
+
+EMAIL_TAIL = """
 =======================================================
 This mail sended by alert program, do not reply please.
 """

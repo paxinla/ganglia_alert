@@ -27,7 +27,7 @@ setup(
     author="paxinla",
     license="MIT",
     packages=find_packages(),
-    package_data={"ganglia_alert", ["config.ini"]},
+    package_data={"ganglia_alert": ["config.ini"]},
     install_requires=requirements(),
     keywords='ganglia email alert',
     classifiers=[
